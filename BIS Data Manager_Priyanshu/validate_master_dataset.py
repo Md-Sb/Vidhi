@@ -7,7 +7,7 @@ import re
 # VIDI MASTER BIS DATASET VALIDATOR
 # =========================================================
 
-MASTER_FILE = r"C:\Users\USER\VIDI\output\master_bis_dataset.json"
+MASTER_FILE = r"C:\Users\Sampriti\Desktop\VIDHI\BIS Data Manager_Priyanshu\output\master_bis_dataset.json"
 
 REQUIRED_METADATA = [
     "standard_number",

@@ -6,7 +6,7 @@ import os
 # VIDI BIS CHUNK DATASET QA
 # =========================================================
 
-CHUNK_FILE = r"C:\Users\USER\VIDI\output\chunks\bis_chunks.json"
+CHUNK_FILE = r"C:\Users\Sampriti\Desktop\VIDHI\BIS Data Manager_Priyanshu\output\chunks\bis_chunks.json"
 
 
 print("=" * 55)

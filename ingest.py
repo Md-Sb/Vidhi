@@ -1,78 +1,150 @@
-"""
-ingest.py
----------
-Run this file ONCE (and again whenever you add new PDFs to data/).
-
-What it does, step by step:
-1. Reads every PDF inside the data/ folder.
-2. Splits the text into small overlapping chunks (so the model gets
-   focused context instead of a whole 50-page document at once).
-3. Converts each chunk into a vector (a list of numbers that represents
-   its meaning) using Google's embedding model.
-4. Stores all those vectors in a FAISS index on disk, so app.py can
-   later search them instantly without recomputing anything.
-"""
-
+import json
 import os
-from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+from sentence_transformers import SentenceTransformer
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 
-# Load GOOGLE_API_KEY from the .env file into the environment
-load_dotenv()
 
-DATA_DIR = "data"
-INDEX_DIR = "faiss_index"
+# =========================================================
+# VIDI LOCAL EMBEDDING INGESTION
+# =========================================================
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def load_documents():
-    """Load every PDF in data/ into LangChain 'Document' objects (one per page)."""
-    docs = []
-    if not os.path.isdir(DATA_DIR):
-        raise FileNotFoundError(f"'{DATA_DIR}/' does not exist. Create it and add PDFs.")
+CHUNK_FILE = os.path.join(
+    BASE_DIR,
+    "BIS Data Manager_Priyanshu",
+    "output",
+    "chunks",
+    "bis_chunks.json"
+)
 
-    pdf_files = [f for f in os.listdir(DATA_DIR) if f.lower().endswith(".pdf")]
-    if not pdf_files:
-        raise FileNotFoundError(f"No PDF files found in '{DATA_DIR}/'.")
-
-    for filename in pdf_files:
-        path = os.path.join(DATA_DIR, filename)
-        print(f"Loading: {filename}")
-        loader = PyPDFLoader(path)
-        docs.extend(loader.load())  # one Document per PDF page
-    return docs
+INDEX_DIR = os.path.join(
+    BASE_DIR,
+    "faiss_index"
+)
 
 
-def main():
-    print("Step 1: Loading PDFs...")
-    docs = load_documents()
-    print(f"  Loaded {len(docs)} pages total.\n")
+print("=" * 60)
+print("VIDHI BIS RAG INGESTION")
+print("=" * 60)
 
-    print("Step 2: Splitting into chunks...")
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,      # ~1000 characters per chunk
-        chunk_overlap=150,    # slight overlap so context isn't cut mid-sentence
+
+# =========================================================
+# LOAD BIS CHUNKS
+# =========================================================
+
+print("\nStep 1: Loading validated BIS chunks...")
+
+with open(
+    CHUNK_FILE,
+    "r",
+    encoding="utf-8"
+) as f:
+    data = json.load(f)
+
+chunks = data.get("chunks", [])
+
+print(f"  Loaded {len(chunks)} BIS chunks.")
+
+
+# =========================================================
+# CONVERT TO LANGCHAIN DOCUMENTS
+# =========================================================
+
+documents = []
+
+for chunk in chunks:
+
+    metadata = {
+        "standard_number": chunk.get("standard_number", ""),
+        "title": chunk.get("title", ""),
+        "edition": chunk.get("edition", ""),
+        "status": chunk.get("status", ""),
+        "sector": chunk.get("sector", ""),
+        "product": chunk.get("product", ""),
+        "source": chunk.get("source", ""),
+        "filename": chunk.get("filename", ""),
+        "clause": chunk.get("clause", ""),
+        "page_start": chunk.get("page_start", ""),
+        "page_end": chunk.get("page_end", ""),
+        "chunk_id": chunk.get("chunk_id", "")
+    }
+
+    documents.append(
+        Document(
+            page_content=chunk.get("text", ""),
+            metadata=metadata
+        )
     )
-    chunks = splitter.split_documents(docs)
-    print(f"  Created {len(chunks)} chunks.\n")
 
 
+# =========================================================
+# LOCAL EMBEDDING MODEL
+# =========================================================
 
-    print("Step 3: Creating embeddings and building FAISS index...")
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001"
-    )
-    vectorstore = FAISS.from_documents(chunks, embeddings)
+print("\nStep 2: Loading local embedding model...")
 
+model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
 
-
-    print(f"Step 4: Saving index to '{INDEX_DIR}/'...")
-    vectorstore.save_local(INDEX_DIR)
-
-    print("\nDone. You can now run: streamlit run app.py")
+print("  Local embedding model ready.")
 
 
-if __name__ == "__main__":
-    main()
+# =========================================================
+# CUSTOM EMBEDDING CLASS
+# =========================================================
+
+class LocalEmbeddings:
+
+    def embed_documents(self, texts):
+        return model.encode(
+            texts,
+            normalize_embeddings=True
+        ).tolist()
+
+    def embed_query(self, text):
+        return model.encode(
+            text,
+            normalize_embeddings=True
+        ).tolist()
+
+
+embeddings = LocalEmbeddings()
+
+
+# =========================================================
+# CREATE FAISS INDEX
+# =========================================================
+
+print("\nStep 3: Creating FAISS index...")
+
+vectorstore = FAISS.from_documents(
+    documents,
+    embeddings
+)
+
+
+# =========================================================
+# SAVE
+# =========================================================
+
+print("\nStep 4: Saving FAISS index...")
+
+vectorstore.save_local(
+    INDEX_DIR
+)
+
+
+print("\n" + "=" * 60)
+print("INGESTION COMPLETE")
+print("=" * 60)
+
+print(f"Documents embedded : {len(documents)}")
+print(f"FAISS index        : {INDEX_DIR}")
+
+print("\n✅ LOCAL RAG VECTOR DATABASE READY")
+print("✅ No Gemini embedding quota required")
+print("=" * 60)

@@ -7,9 +7,9 @@ import re
 # VIDI BIS SEMANTIC CHUNK BUILDER
 # =========================================================
 
-MASTER_FILE = r"C:\Users\USER\VIDI\output\master_bis_dataset.json"
+MASTER_FILE = r"C:\Users\Sampriti\Desktop\VIDHI\BIS Data Manager_Priyanshu\output\master_bis_dataset.json"
 
-OUTPUT_FOLDER = r"C:\Users\USER\VIDI\output\chunks"
+OUTPUT_FOLDER = r"C:\Users\Sampriti\Desktop\VIDHI\BIS Data Manager_Priyanshu\output\chunks"
 
 OUTPUT_FILE = os.path.join(
     OUTPUT_FOLDER,
