@@ -1,0 +1,32 @@
+[
+  {
+    "standard_number": "IS 14543:2024",
+    "title": "Packaged Drinking Water (other than Packaged Natural Mineral Water) — Specification",
+    "edition": "2024",
+    "status": "Current",
+    "sector": "Food and Agriculture",
+    "product": "Packaged Drinking Water",
+    "source": "BIS",
+    "filename": "14543_2024.pdf"
+  },
+  {
+    "standard_number": "IS 18698:2026",
+    "title": "Dimethyl Ether (DME) Blended Liquefied Petroleum Gas (LPG) — Specification",
+    "edition": "2026",
+    "status": "Current",
+    "sector": "Petroleum, Coal and Related Products",
+    "product": "Dimethyl Ether (DME) Blended LPG",
+    "source": "BIS",
+    "filename": "18698_2026.pdf"
+  },
+  {
+    "standard_number": "IS 19690:2026",
+    "title": "Video and Digital Games — Age-Rating and Content Descriptor Labels — Specification",
+    "edition": "2026",
+    "status": "Current",
+    "sector": "Services",
+    "product": "Video and Digital Games",
+    "source": "BIS",
+    "filename": "19690_2026.pdf"
+  }
+]
